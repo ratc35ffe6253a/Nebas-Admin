@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { 
   fetchTestimonials, editTestimonial, deleteTestimonial, 
   fetchVolunteers, editVolunteer, deleteVolunteer,
-  fetchBlogPosts, createBlogPost, editBlogPost, deleteBlogPost
+  fetchBlogPosts, deleteBlogPost
 } from "../api";
 
 function AdminDashboard() {
@@ -36,15 +36,34 @@ function AdminDashboard() {
   // ✅ Handle Blog Post Creation
   const handleCreatePost = async (e) => {
     e.preventDefault();
-    await createBlogPost(newPost.title, newPost.content, newPost.imageUrl, newPost.videoUrl, token);
-    setNewPost({ title: "", content: "", imageUrl: "", videoUrl: "" });
+    const formData = new FormData();
+    formData.append("title", newPost.title);
+    formData.append("content", newPost.content);
+    if (newPost.file) formData.append("file", newPost.file);
+
+    await fetch(`${process.env.REACT_APP_API_URL}/blog`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+
+    setNewPost({ title: "", content: "", file: null });
     fetchData();
   };
 
   // ✅ Handle Blog Post Editing
   const handleEditPost = async (e) => {
     e.preventDefault();
-    await editBlogPost(editPost._id, editPost.title, editPost.content, editPost.imageUrl, editPost.videoUrl, token);
+    const formData = new FormData();
+    formData.append("title", editPost.title);
+    formData.append("content", editPost.content);
+    if (editPost.file) formData.append("file", editPost.file);
+
+    await fetch(`${process.env.REACT_APP_API_URL}/blog/${editPost._id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
     setEditPost(null);
     fetchData();
   };
@@ -100,14 +119,8 @@ function AdminDashboard() {
           onChange={(e) => editPost ? setEditPost({ ...editPost, content: e.target.value }) : setNewPost({ ...newPost, content: e.target.value })}
         />
         <input 
-          type="text" placeholder="Image URL (optional)" 
-          value={editPost ? editPost.imageUrl : newPost.imageUrl}
-          onChange={(e) => editPost ? setEditPost({ ...editPost, imageUrl: e.target.value }) : setNewPost({ ...newPost, imageUrl: e.target.value })}
-        />
-        <input 
-          type="text" placeholder="Video URL (optional)" 
-          value={editPost ? editPost.videoUrl : newPost.videoUrl}
-          onChange={(e) => editPost ? setEditPost({ ...editPost, videoUrl: e.target.value }) : setNewPost({ ...newPost, videoUrl: e.target.value })}
+          type="file" accept="image/*,video/*" 
+          onChange={(e) => editPost ? setEditPost({ ...editPost, file: e.target.files[0] }) : setNewPost({ ...newPost, file: e.target.files[0] })}
         />
         <button type="submit">{editPost ? "Save Changes" : "Create Blog Post"}</button>
       </form>

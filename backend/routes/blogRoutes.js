@@ -1,6 +1,7 @@
 const express = require("express");
 const BlogPost  = require("../models/BlogPost.js");
 const { verifyAdmin } = require("../middleware/authMiddleware.js");
+const upload = require("../middleware/uploadMiddleware.js");
 
 const router = express.Router();
 
@@ -11,19 +12,23 @@ router.get("/", async (req, res) => {
 });
 
 // Create a new blog post (Admin only)
-router.post("/", verifyAdmin, async (req, res) => {
-  const { title, content, imageUrl, videoUrl } = req.body;
-  const newPost = new BlogPost({ title, content, imageUrl, videoUrl });
+router.post("/", verifyAdmin, upload.single("file"), async (req, res) => {
+  const { title, content } = req.body;
+  const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+  const newPost = new BlogPost({ title, content, fileUrl });
   await newPost.save();
   res.json(newPost);
 });
 
 // Edit a blog post (Admin only)
-router.put("/:id", verifyAdmin, async (req, res) => {
-  const { title, content, imageUrl, videoUrl } = req.body;
+router.put("/:id", verifyAdmin, upload.single("file"), async (req, res) => {
+  const { title, content, } = req.body;
+  const fileUrl = req.file ? `/uploads/${req.file.filename}` : req.body.fileUrl;
+
   const updatedPost = await BlogPost.findByIdAndUpdate(
     req.params.id, 
-    { title, content, imageUrl, videoUrl }, 
+    { title, content, fileUrl }, 
     { new: true }
   );
   res.json(updatedPost);
