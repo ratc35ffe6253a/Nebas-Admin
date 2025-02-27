@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
-import { fetchTestimonials, editTestimonial, deleteTestimonial, fetchVolunteers, editVolunteer, deleteVolunteer } from "../api";
-import { fetchBlogPosts, createBlogPost, editBlogPost, deleteBlogPost } from "../api";
+import { 
+  fetchTestimonials, editTestimonial, deleteTestimonial, 
+  fetchVolunteers, editVolunteer, deleteVolunteer,
+  fetchBlogPosts, createBlogPost, editBlogPost, deleteBlogPost
+} from "../api";
 
 function AdminDashboard() {
   const [testimonials, setTestimonials] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
+  const [blogPosts, setBlogPosts] = useState([]);
+
   const [editTestimonialData, setEditTestimonialData] = useState(null);
   const [editVolunteerData, setEditVolunteerData] = useState(null);
+
+  const [newPost, setNewPost] = useState({ title: "", content: "", imageUrl: "", videoUrl: "" });
+  const [editPost, setEditPost] = useState(null);
+
   const token = localStorage.getItem("token");
 
   // Check if admin is logged in
@@ -16,11 +25,34 @@ function AdminDashboard() {
     } else {
         fetchData();
     }
-  }, []);
+  }, [token]);
 
   const fetchData = async () => {
     setTestimonials(await fetchTestimonials());
     setVolunteers(await fetchVolunteers());
+    setBlogPosts(await fetchBlogPosts());
+  };
+
+  // ✅ Handle Blog Post Creation
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    await createBlogPost(newPost.title, newPost.content, newPost.imageUrl, newPost.videoUrl, token);
+    setNewPost({ title: "", content: "", imageUrl: "", videoUrl: "" });
+    fetchData();
+  };
+
+  // ✅ Handle Blog Post Editing
+  const handleEditPost = async (e) => {
+    e.preventDefault();
+    await editBlogPost(editPost._id, editPost.title, editPost.content, editPost.imageUrl, editPost.videoUrl, token);
+    setEditPost(null);
+    fetchData();
+  };
+
+  // ✅ Handle Blog Post Deletion
+  const handleDeletePost = async (id) => {
+    await deleteBlogPost(id, token);
+    fetchData();
   };
 
   const handleEditTestimonial = async (e) => {
@@ -41,6 +73,7 @@ function AdminDashboard() {
     setEditVolunteerData(null);
     fetchData();
   }
+
   const handdleDeleteVolunteer = async (id) => {
     await deleteVolunteer(id, token);
     fetchData();
@@ -53,6 +86,46 @@ function AdminDashboard() {
         Logout
       </button>
 
+      {/* ✅ Blog Management Section */}
+      <h2>Manage Blog Posts</h2>
+      <form onSubmit={editPost ? handleEditPost : handleCreatePost}>
+        <input 
+          type="text" placeholder="Title" required 
+          value={editPost ? editPost.title : newPost.title}
+          onChange={(e) => editPost ? setEditPost({ ...editPost, title: e.target.value }) : setNewPost({ ...newPost, title: e.target.value })}
+        />
+        <textarea 
+          placeholder="Content" required 
+          value={editPost ? editPost.content : newPost.content}
+          onChange={(e) => editPost ? setEditPost({ ...editPost, content: e.target.value }) : setNewPost({ ...newPost, content: e.target.value })}
+        />
+        <input 
+          type="text" placeholder="Image URL (optional)" 
+          value={editPost ? editPost.imageUrl : newPost.imageUrl}
+          onChange={(e) => editPost ? setEditPost({ ...editPost, imageUrl: e.target.value }) : setNewPost({ ...newPost, imageUrl: e.target.value })}
+        />
+        <input 
+          type="text" placeholder="Video URL (optional)" 
+          value={editPost ? editPost.videoUrl : newPost.videoUrl}
+          onChange={(e) => editPost ? setEditPost({ ...editPost, videoUrl: e.target.value }) : setNewPost({ ...newPost, videoUrl: e.target.value })}
+        />
+        <button type="submit">{editPost ? "Save Changes" : "Create Blog Post"}</button>
+      </form>
+
+      <ul>
+        {blogPosts.map((post) => (
+          <li key={post._id}>
+            <h3>{post.title}</h3>
+            <p>{post.content}</p>
+            {post.imageUrl && <img src={post.imageUrl} alt="Post" width="100" />}
+            {post.videoUrl && <a href={post.videoUrl} target="_blank" rel="noopener noreferrer">Watch Video</a>}
+            <button onClick={() => setEditPost(post)}>Edit</button>
+            <button onClick={() => handleDeletePost(post._id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+
+      {/* ✅ Testimonials Management Section */}
       <h2>Testimonials</h2>
       <ul>
         {testimonials.map((t) => (
@@ -81,6 +154,7 @@ function AdminDashboard() {
         </form>
       )}
 
+      {/* ✅ Volunteers Management Section */}
       <h2>Volunteers</h2>
       <ul>
         {volunteers.map((v) => (
