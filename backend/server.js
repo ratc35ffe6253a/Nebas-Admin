@@ -4,6 +4,9 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const { verifyAdmin } = require("./middleware/authMiddleware");
+const testimonialRoutes = require("./routes/testimonialRoutes");
+const volunteerRoutes = require("./routes/volunteerRoutes");
+const blogRoutes = require("./routes/blogRoutes");
 
 dotenv.config();
 const app = express();
@@ -19,6 +22,9 @@ mongoose.connect(MONGO_URI)
   .catch((err) => console.log("❌ MongoDB Error:", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/volunteers", volunteerRoutes);
+app.use("/api/blog", blogRoutes);
 
 // Protect admin-only routes
 app.get("/api/admin/dashboard", verifyAdmin, (req, res) => {

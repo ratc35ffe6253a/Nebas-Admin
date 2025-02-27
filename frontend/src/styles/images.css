@@ -1,0 +1,26 @@
+/* General Image Styles */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+/* Blog Media */
+.blog-img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 20px auto;
+}
+
+.video-container video {
+  width: 100%;
+  border-radius: 10px;
+}
